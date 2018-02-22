@@ -1,22 +1,21 @@
 {
-  "name": "angular-library-seed",
+  "name": "speedray-swagger-utils",
   "version": "0.0.20",
-  "description": "Angular library seed",
+  "description": "Utility libraries for speedray swagger resources",
   "main": "./dist/index.umd.js",
   "module": "./dist/index.js",
   "typings": "./dist/index.d.ts",
-  "license": "MIT",
+  "license": "LGPLv3",
   "keywords": [
+    "speedray",
+    "swagger",
     "angular",
-    "angular4",
+    "angular5",
     "aot",
     "aot-compatible",
     "aot-compilation",
     "library",
     "ng",
-    "seed",
-    "starter",
-    "tick-tock",
     "typescript"
   ],
   "author": {
