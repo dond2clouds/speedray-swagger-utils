@@ -41,7 +41,15 @@ export class HttpCache {
 
     public addInterestedService(url: string, methods?: Array<string|RequestMethod>) {
         const services = this.getCache().services;
-        services[url] = this.getCacheServicesEntry(url, methods);
+        const service = services[url];
+        const entry = this.getCacheServicesEntry(url, methods);
+        if (service) {
+            for ( let i = 0; i < service.methods.length; i++) {
+                service.methods[i] = service.methods[i] || entry.methods[i];
+            }
+        } else {
+            services[url] = entry;
+        }
     }
 
     public isServiceCacheable(url: string | Request, options?: RequestOptionsArgs): boolean {

@@ -29,7 +29,7 @@ describe('Test HttpProxy service', () => {
     expect(http).toBeTruthy();
     expect(httpCache).toBeTruthy();
     httpCache.flush();
-    httpCache.addInterestedService('http://www.mock.com/test-service-one');
+    httpCache.addInterestedService('http://www.mock.com/test-service-one', [RequestMethod.Get]);
     http.get('http://www.mock.com/test-service-one').subscribe((results) => {
         expect(results.ok).toBeTruthy();
     });
@@ -37,6 +37,7 @@ describe('Test HttpProxy service', () => {
         expect(results.ok).toBeTruthy();
         expect(results.json().callCounter).toBe(0);
     });
+    httpCache.addInterestedService('http://www.mock.com/test-service-one', [RequestMethod.Post]);
     http.post('http://www.mock.com/test-service-one', { request: 'this is a post request' }).subscribe((results) => {
         expect(results.ok).toBeTruthy();
         expect(results.json().callCounter).toBe(1);
