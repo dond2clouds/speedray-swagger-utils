@@ -1,9 +1,8 @@
 import { NgModule } from '@angular/core';
 import { HttpProxy, HttpCache } from './services';
-import { HttpModule, Http, XHRBackend, RequestOptions } from '@angular/http';
+import { Http, XHRBackend, RequestOptions } from '@angular/http';
 
-export function HttpFactory(backend: XHRBackend, options: RequestOptions,
-                            httpCache: HttpCache): HttpProxy {
+export function httpFactory(backend: XHRBackend, options: RequestOptions, httpCache: HttpCache): HttpProxy {
   return new HttpProxy(backend, options, httpCache);
 }
 
@@ -11,15 +10,7 @@ export function HttpFactory(backend: XHRBackend, options: RequestOptions,
   providers: [
     HttpProxy,
     HttpCache,
-    {
-         provide: Http,
-         deps: [XHRBackend, RequestOptions, HttpCache],
-         useFactory: HttpProxy
-    }
-  ],
-  declarations: [
-  ],
-  exports: [
+    { provide: Http, useFactory: httpFactory, deps: [XHRBackend, RequestOptions, HttpCache] },
   ]
 })
 export class SwaggerUtilsModule {

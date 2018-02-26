@@ -8,7 +8,7 @@ export interface HttpCacheEntry {
 }
 
 export interface HttpCacheEntries {
-    [key: string]: HttpCacheEntry;
+    [index: string]: HttpCacheEntry;
 }
 
 export interface HttpCacheServiceEntry {
@@ -17,21 +17,26 @@ export interface HttpCacheServiceEntry {
 }
 
 export interface HttpCacheServices {
-    [key: string]: HttpCacheServiceEntry;
+    [index: string]: HttpCacheServiceEntry;
+}
+
+export interface HttpCacheGlobal {
+    cache: HttpCacheEntries;
+    services: HttpCacheServices;
 }
 
 @Injectable()
 export class HttpCache {
 
     public flush() {
-        delete window['com_xtivia_speedray_http_cache'];
+        delete (window as any)['com_xtivia_speedray_http_cache'];
     }
 
     public lookup(url: string | Request, options: RequestOptionsArgs): Response {
         const entries = this.getCache().cache;
         const cacheKey = this.createCacheKey(url, options);
         if (cacheKey) {
-            const entry = entries[cacheKey];
+            const entry = entries[cacheKey.toString()];
             if (entry) {
                 return entry.results;
             }
@@ -41,19 +46,19 @@ export class HttpCache {
 
     public addInterestedService(url: string, methods?: Array<string|RequestMethod>) {
         const services = this.getCache().services;
-        const service = services[url];
+        const service = services[url.toString()];
         const entry = this.getCacheServicesEntry(url, methods);
         if (service) {
             for ( let i = 0; i < service.methods.length; i++) {
                 service.methods[i] = service.methods[i] || entry.methods[i];
             }
         } else {
-            services[url] = entry;
+            services[url.toString()] = entry;
         }
     }
 
     public isServiceCacheable(url: string | Request, options?: RequestOptionsArgs): boolean {
-        const service = this.getCache().services[this.getUrl(url)];
+        const service = this.getCache().services[this.getUrl(url).toString()];
         const methodValue = this.getMethodForString(url instanceof Request ? url.method : options ? options.method : null);
         return  !isNullOrUndefined(methodValue) && service && service.methods && service.methods[methodValue.valueOf()];
     }
@@ -63,7 +68,7 @@ export class HttpCache {
             const entries = this.getCache().cache;
             const cacheKey = this.createCacheKey(url, options);
             if (cacheKey) {
-                entries[cacheKey] = {
+                entries[cacheKey.toString()] = {
                     results: response
                 };
             }
@@ -82,10 +87,10 @@ export class HttpCache {
         return hash;
     }
 
-    private getCache(): HttpCacheEntries {
-        let cache = window['com_xtivia_speedray_http_cache'];
+    private getCache(): HttpCacheGlobal {
+        let cache = (window as any)['com_xtivia_speedray_http_cache'];
         if (cache === undefined || cache === null) {
-            cache = window['com_xtivia_speedray_http_cache'] = {
+            cache = (window as any)['com_xtivia_speedray_http_cache'] = {
                 cache: {},
                 services: {}
             };
