@@ -1,9 +1,15 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs/observable';
-import { Http, ConnectionBackend, RequestOptions, RequestOptionsArgs,
+import { Http, XHRBackend, ConnectionBackend, RequestOptions, RequestOptionsArgs,
     Response, Headers, URLSearchParams, RequestMethod } from '@angular/http';
 import { HttpCache } from './http-cache.service';
 import 'rxjs/add/operator/map';
+
+export function httpFactory(backend: XHRBackend, options: RequestOptions, httpCache: HttpCache): HttpProxy {
+    return new HttpProxy(backend, options, httpCache);
+}
+
+export const HTTP_FACTORY_DEPENDENCIES = [XHRBackend, RequestOptions, HttpCache];
 
 @Injectable()
 export class HttpProxy extends Http {

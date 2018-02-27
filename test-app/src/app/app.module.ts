@@ -1,12 +1,8 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
-import { OpenApiUtilsModule, HttpCache, HttpProxy } from '@speedray/openapi-utils';
+import { HttpCache, HttpProxy, OpenApiUtilsModule } from '@speedray/openapi-utils';
 import { HttpModule, Http, XHRBackend, RequestOptions } from '@angular/http';
 import { AppComponent } from './app.component';
-
-export function httpFactory(backend: XHRBackend, options: RequestOptions, httpCache: HttpCache): HttpProxy {
-  return new HttpProxy(backend, options, httpCache);
-}
 
 @NgModule({
   declarations: [
@@ -15,9 +11,9 @@ export function httpFactory(backend: XHRBackend, options: RequestOptions, httpCa
   imports: [
     BrowserModule,
     HttpModule,
-    OpenApiUtilsModule.forRoot(),
+    OpenApiUtilsModule.forRoot()
   ],
-  providers: [{ provide: Http, useFactory: httpFactory, deps: [XHRBackend, RequestOptions, HttpCache] }],
+  providers: [],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
