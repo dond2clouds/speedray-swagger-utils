@@ -1,5 +1,5 @@
 {
-  "name": "speedray-swagger-utils",
+  "name": "@speedray/openapi-utils",
   "version": "0.0.20",
   "description": "Utility libraries for speedray swagger resources",
   "main": "./dist/index.umd.js",

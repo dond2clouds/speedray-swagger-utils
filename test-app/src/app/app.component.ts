@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Http } from '@angular/http';
-import { HttpCache } from 'speedray-swagger-utils';
+import { HttpCache } from '@speedray/openapi-utils';
 
 @Component({
   selector: 'app-root',
