@@ -15,6 +15,7 @@
     "no-input-rename": true,
     "no-output-rename": true,
     "no-string-literal": false,
+    "object-literal-shorthand": false,
     "object-literal-sort-keys": false,
     "ordered-imports": false,
     "pipe-naming": [true, "camelCase", "my"],
