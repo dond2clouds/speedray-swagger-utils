@@ -1,76 +1,67 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs/observable';
-import { RequestOptionsArgs, Request, RequestMethod, Response } from '@angular/http';
+import { RequestOptionsArgs, Request, RequestMethod, Response, ResponseOptions } from '@angular/http';
 import { isNullOrUndefined } from 'util';
-
-export interface HttpCacheEntry {
-    results: Response;
-}
-
-export interface HttpCacheEntries {
-    [index: string]: HttpCacheEntry;
-}
-
-export interface HttpCacheServiceEntry {
-    url: string;
-    methods: boolean[];
-}
-
-export interface HttpCacheServices {
-    [index: string]: HttpCacheServiceEntry;
-}
-
-export interface HttpCacheGlobal {
-    cache: HttpCacheEntries;
-    services: HttpCacheServices;
-}
 
 @Injectable()
 export class HttpCache {
 
     public flush() {
-        delete (window as any)['com_xtivia_speedray_http_cache'];
+        Object.keys(sessionStorage)
+            .forEach((key) => {
+                if (/^(com\.xtivia\.speedray\.http\.cache\.entry\.)/.test(key)) {
+                    sessionStorage.removeItem(key);
+                }
+            });
+    }
+
+    public flushServices() {
+        Object.keys(sessionStorage)
+            .forEach((key) => {
+                if (/^(com\.xtivia\.speedray\.http\.cache\.service\.)/.test(key)) {
+                    sessionStorage.removeItem(key);
+                }
+            });
     }
 
     public lookup(url: string | Request, options: RequestOptionsArgs): Response {
-        const entries = this.getCache().cache;
         const cacheKey = this.createCacheKey(url, options);
         if (cacheKey) {
-            const entry = entries[cacheKey.toString()];
+            const entry = sessionStorage.getItem('com.xtivia.speedray.http.cache.entry.' + cacheKey.toString());
             if (entry) {
-                return entry.results;
+                return this.createResponseFromJson(entry);
             }
         }
         return null;
     }
 
     public addInterestedService(url: string, methods?: Array<string|RequestMethod>) {
-        const services = this.getCache().services;
-        const service = services[url.toString()];
         const entry = this.getCacheServicesEntry(url, methods);
-        if (service) {
-            for ( let i = 0; i < service.methods.length; i++) {
-                service.methods[i] = service.methods[i] || entry.methods[i];
+        if (methods) {
+            for ( let i = 0; i < methods.length; i++) {
+                const method = this.getMethodForString(methods[i]);
+                if (method) {
+                    const index = method.valueOf();
+                    entry[index] = true;
+                }
             }
-        } else {
-            services[url.toString()] = entry;
         }
+        sessionStorage.setItem('com.xtivia.speedray.http.cache.service.' + url.toString(), JSON.stringify(entry));
     }
 
     public isServiceCacheable(url: string | Request, options?: RequestOptionsArgs): boolean {
-        const service = this.getCache().services[this.getUrl(url).toString()];
+        const urlKey = url ? typeof url === 'string' ? url.toString() : (url as Request).url.toString() : null;
+        const serviceEntry = sessionStorage.getItem('com.xtivia.speedray.http.cache.service.' + urlKey);
+        const service = serviceEntry ? JSON.parse(serviceEntry) : null;
         const methodValue = this.getMethodForString(url instanceof Request ? url.method : options ? options.method : null);
-        return  !isNullOrUndefined(methodValue) && service && service.methods && service.methods[methodValue.valueOf()];
+        return  !isNullOrUndefined(methodValue) && service && service[methodValue.valueOf()];
     }
 
     public cacheServiceResponse(url: string | Request, response: Response, options?: RequestOptionsArgs) {
         if (this.isServiceCacheable(url, options)) {
-            const entries = this.getCache().cache;
             const cacheKey = this.createCacheKey(url, options);
             if (cacheKey) {
-                entries[cacheKey.toString()] = {
-                    results: response
-                };
+                sessionStorage.setItem('com.xtivia.speedray.http.cache.entry.' + cacheKey.toString(), JSON.stringify(response));
             }
         }
     }
@@ -85,17 +76,6 @@ export class HttpCache {
             hash  = hash & hash;
         }
         return hash;
-    }
-
-    private getCache(): HttpCacheGlobal {
-        let cache = (window as any)['com_xtivia_speedray_http_cache'];
-        if (cache === undefined || cache === null) {
-            cache = (window as any)['com_xtivia_speedray_http_cache'] = {
-                cache: {},
-                services: {}
-            };
-        }
-        return cache;
     }
 
     private getMethodForString(method: string|RequestMethod): RequestMethod {
@@ -123,26 +103,26 @@ export class HttpCache {
     }
 
     private createCacheKeyBody(body: any) {
-        let key = '::';
+        let key = '..';
         if (typeof body === 'object') {
             body = JSON.stringify(body);
         }
         if (typeof body === 'string') {
-            key = ':' + body.length;
-            key += ':' + this.hashString(body);
+            key = '.' + body.length;
+            key += '.' + this.hashString(body);
         }
         return key;
     }
 
     private createCacheKey(url: string | Request, options: RequestOptionsArgs): string {
-        let key = '';
+        let key = 'com.xtivia.speedray.http.cache.entry.';
         const method = this.getMethod(url, options);
         if (isNullOrUndefined(method)) {
             return null;
         }
         key += method;
         key += this.createCacheKeyBody(this.getBody(url, options));
-        key += ':' + this.getUrl(url);
+        key += '.' + this.getUrl(url);
         return key;
     }
 
@@ -164,30 +144,38 @@ export class HttpCache {
         return (url as Request).text();
     }
 
-    private getCacheServicesEntry(url: string, methods?: Array<string|RequestMethod>): HttpCacheServiceEntry {
-        const entry = {
-            url: url,
-            methods: [false, false, false, false, false, false, false],
-        };
+    private getCacheServicesEntry(url: string, methods?: Array<string|RequestMethod>): boolean[] {
+        const serviceEntry = sessionStorage.getItem('com.xtivia.speedray.http.cache.service.' + url.toString());
+        const entryMethods = serviceEntry ? JSON.parse(serviceEntry) : [false, false, false, false, false, false, false];
         if (methods) {
             methods.forEach((method) => {
                 if (typeof method === 'string') {
                     const methodValue = this.getMethodForString(method);
                     if (methodValue) {
-                        entry.methods[methodValue.valueOf()] = true;
+                        entryMethods[methodValue.valueOf()] = true;
                     } else {
                         return null;
                     }
                 } else {
-                    entry.methods[method.valueOf()] = true;
+                    entryMethods[method.valueOf()] = true;
                 }
             });
         } else {
-            for (let i = 0; i < entry.methods.length; i++) {
-                entry.methods[i]  = true;
+            for (let i = 0; i < entryMethods.length; i++) {
+                entryMethods[i]  = true;
             }
         }
-        return entry;
+        return entryMethods;
     }
 
+    private createResponseFromJson(json: string): Response {
+        const jsonObject = json ? JSON.parse(json) : null;
+        const response = jsonObject ? new Response(new ResponseOptions({
+            body: jsonObject._body,
+            status: jsonObject.status,
+            headers: jsonObject.headers,
+            url: jsonObject.url
+        })) : null;
+        return response;
+    }
 }

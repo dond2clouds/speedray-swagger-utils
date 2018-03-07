@@ -29,6 +29,7 @@ describe('Test HttpProxy service', () => {
     expect(http).toBeTruthy();
     expect(httpCache).toBeTruthy();
     httpCache.flush();
+    httpCache.flushServices();
     httpCache.addInterestedService('http://www.mock.com/test-service-one', [RequestMethod.Get]);
     http.get('http://www.mock.com/test-service-one').subscribe((results) => {
         expect(results.ok).toBeTruthy();
@@ -67,10 +68,12 @@ describe('Test HttpProxy service', () => {
     expect(http).toBeTruthy();
     expect(httpCache).toBeTruthy();
     httpCache.flush();
+    httpCache.flushServices();
     httpCache.addInterestedService('http://www.mock.com/test-service-one',
                                    ['put', 'delete', RequestMethod.Head, 'head', 'options', 'post', 'patch']);
     http.get('http://www.mock.com/test-service-one').subscribe((results) => {
       expect(results.ok).toBeTruthy();
+      expect(results.json().callCounter).toBe(0);
     });
     http.get('http://www.mock.com/test-service-one').subscribe((results) => {
       expect(results.ok).toBeTruthy();
@@ -87,6 +90,7 @@ describe('Test HttpProxy service', () => {
     expect(http).toBeTruthy();
     expect(httpCache).toBeTruthy();
     httpCache.flush();
+    httpCache.flushServices();
     httpCache.addInterestedService('http://www.mock.com/test-service-one');
     http.post('http://www.mock.com/test-service-one', { test: 1}).subscribe((results) => {
       expect(results.ok).toBeTruthy();
@@ -115,6 +119,7 @@ describe('Test HttpProxy service', () => {
     expect(http).toBeTruthy();
     expect(httpCache).toBeTruthy();
     httpCache.flush();
+    httpCache.flushServices();
     httpCache.addInterestedService('http://www.mock.com/test-service-one', ['get', 'somethingbad']);
     http.get('http://www.mock.com/test-service-one').subscribe((results) => {
       expect(results.ok).toBeTruthy();
