@@ -79,7 +79,8 @@ export class HttpProxy extends Http {
                              options, RequestMethod.Options, url)) as any, options);
     }
 
-    private mergeOptions(defaultOpts, providedOpts, method, url) {
+    private mergeOptions(defaultOpts: HttpCacheRequestOptions, providedOpts: HttpCacheRequestOptionArgs, method: string | RequestMethod,
+                         url: string): HttpCacheRequestOptions {
         const newOptions = defaultOpts;
         if (providedOpts) {
             return (newOptions.merge({
@@ -90,9 +91,7 @@ export class HttpProxy extends Http {
                 headers: providedOpts.headers,
                 body: providedOpts.body,
                 withCredentials: providedOpts.withCredentials,
-                responseType: providedOpts.responseType,
-                doNotUseCachedResponse: providedOpts.doNotUseCachedResponse,
-                doNotCacheResponse: providedOpts.doNotCacheResponse
+                responseType: providedOpts.responseType
             }));
         }
         return (newOptions.merge(new RequestOptions({ method: method, url: url })));
