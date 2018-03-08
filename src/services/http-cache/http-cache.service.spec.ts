@@ -1,8 +1,9 @@
 import { TestBed, inject } from '@angular/core/testing';
-import { HttpCache, HttpProxy } from './index';
+import { HttpCache, HttpProxy, HttpCacheRequestOptionArgs } from './index';
 import { Http, BaseRequestOptions, Response, ResponseOptions, XHRBackend, RequestMethod } from '@angular/http';
 import { MockBackend, MockConnection } from '@angular/http/testing';
 import { ReflectiveInjector } from '@angular/core';
+import { HttpCacheRequestOptions } from './http-cache-request-options';
 
 describe('Test HttpProxy service', () => {
   beforeEach(() => {
@@ -131,5 +132,36 @@ describe('Test HttpProxy service', () => {
     });
     expect(() => { http.request('http://www.mock.com/test-service-one', { method: 'somethingbad'}); } )
       .toThrow();
+  }));
+
+  it('doNotCache working', inject([Http, HttpCache, MockBackend], (http: Http, httpCache: HttpCache,
+                                                                   mockBackend: MockBackend) => {
+    let counter = 0;
+    ((http as HttpProxy).getBackend() as MockBackend).connections.subscribe((connection: MockConnection) => {
+      connection.mockRespond(new Response(new ResponseOptions({status: 200, body: { callCounter: counter++ }})));
+    });
+    expect(http).toBeTruthy();
+    expect(httpCache).toBeTruthy();
+    httpCache.flush();
+    httpCache.flushServices();
+    httpCache.addInterestedService('http://www.mock.com/test-service-one');
+    http.get('http://www.mock.com/test-service-one').subscribe((results) => {
+      expect(results.ok).toBeTruthy();
+      expect(results.json().callCounter).toBe(0);
+    });
+    http.get('http://www.mock.com/test-service-one',
+             {doNotUseCachedResponse: true} as HttpCacheRequestOptionArgs).subscribe((results) => {
+      expect(results.ok).toBeTruthy();
+      expect(results.json().callCounter).toBe(1);
+    });
+    http.get('http://www.mock.com/test-service-one',
+             { doNotUseCachedResponse: true, doNotCacheResponse: true} as HttpCacheRequestOptionArgs).subscribe((results) => {
+      expect(results.ok).toBeTruthy();
+      expect(results.json().callCounter).toBe(2);
+    });
+    http.get('http://www.mock.com/test-service-one').subscribe((results) => {
+      expect(results.ok).toBeTruthy();
+      expect(results.json().callCounter).toBe(1);
+    });
   }));
 });

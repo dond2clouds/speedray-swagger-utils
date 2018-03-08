@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs/observable';
-import { RequestOptionsArgs, Request, RequestMethod, Response, ResponseOptions } from '@angular/http';
+import { RequestOptionsArgs, Request, RequestMethod, Response, ResponseOptions, RequestOptions } from '@angular/http';
+import { HttpCacheRequestOptionArgs } from './http-proxy.service';
 import { isNullOrUndefined } from 'util';
 
 @Injectable()
@@ -24,12 +25,15 @@ export class HttpCache {
             });
     }
 
-    public lookup(url: string | Request, options: RequestOptionsArgs): Response {
-        const cacheKey = this.createCacheKey(url, options);
-        if (cacheKey) {
-            const entry = sessionStorage.getItem('com.xtivia.speedray.http.cache.entry.' + cacheKey.toString());
-            if (entry) {
-                return this.createResponseFromJson(entry);
+    public lookup(url: string | Request, options: HttpCacheRequestOptionArgs): Response {
+        if (!(options && options.doNotUseCachedResponse)) {
+            const cacheKey = this.createCacheKey(url, options);
+            if (cacheKey) {
+                const entry = sessionStorage.getItem('com.xtivia.speedray.http.cache.entry.' + cacheKey.toString());
+                if (entry) {
+                    return this.createResponseFromJson(entry);
+                }
+
             }
         }
         return null;
@@ -45,11 +49,15 @@ export class HttpCache {
                     entry[index] = true;
                 }
             }
+        } else {
+            for ( let i = 0; i < entry.length; i++) {
+                entry[i] = true;
+            }
         }
         sessionStorage.setItem('com.xtivia.speedray.http.cache.service.' + url.toString(), JSON.stringify(entry));
     }
 
-    public isServiceCacheable(url: string | Request, options?: RequestOptionsArgs): boolean {
+    public isServiceCacheable(url: string | Request, options?: HttpCacheRequestOptionArgs): boolean {
         const urlKey = url ? typeof url === 'string' ? url.toString() : (url as Request).url.toString() : null;
         const serviceEntry = sessionStorage.getItem('com.xtivia.speedray.http.cache.service.' + urlKey);
         const service = serviceEntry ? JSON.parse(serviceEntry) : null;
@@ -57,8 +65,8 @@ export class HttpCache {
         return  !isNullOrUndefined(methodValue) && service && service[methodValue.valueOf()];
     }
 
-    public cacheServiceResponse(url: string | Request, response: Response, options?: RequestOptionsArgs) {
-        if (this.isServiceCacheable(url, options)) {
+    public cacheServiceResponse(url: string | Request, response: Response, options?: HttpCacheRequestOptionArgs) {
+        if (!(options && options.doNotCacheResponse) && this.isServiceCacheable(url, options)) {
             const cacheKey = this.createCacheKey(url, options);
             if (cacheKey) {
                 sessionStorage.setItem('com.xtivia.speedray.http.cache.entry.' + cacheKey.toString(), JSON.stringify(response));
@@ -114,7 +122,7 @@ export class HttpCache {
         return key;
     }
 
-    private createCacheKey(url: string | Request, options: RequestOptionsArgs): string {
+    private createCacheKey(url: string | Request, options: HttpCacheRequestOptionArgs): string {
         let key = 'com.xtivia.speedray.http.cache.entry.';
         const method = this.getMethod(url, options);
         if (isNullOrUndefined(method)) {
@@ -130,14 +138,14 @@ export class HttpCache {
         return typeof url === 'string' ? url : url.url;
     }
 
-    private getMethod(url: string | Request, options?: RequestOptionsArgs): RequestMethod {
+    private getMethod(url: string | Request, options?: HttpCacheRequestOptionArgs): RequestMethod {
         if (typeof url === 'string') {
             return options ? this.getMethodForString(options.method) : null;
         }
         return this.getMethodForString(url.method);
     }
 
-    private getBody(url: string | Request, options?: RequestOptionsArgs): string {
+    private getBody(url: string | Request, options?: HttpCacheRequestOptionArgs): string {
         if (typeof url === 'string') {
             return options ? options.body : null;
         }
