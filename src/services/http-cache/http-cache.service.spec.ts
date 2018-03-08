@@ -3,7 +3,6 @@ import { HttpCache, HttpProxy, HttpCacheRequestOptionArgs } from './index';
 import { Http, BaseRequestOptions, Response, ResponseOptions, XHRBackend, RequestMethod } from '@angular/http';
 import { MockBackend, MockConnection } from '@angular/http/testing';
 import { ReflectiveInjector } from '@angular/core';
-import { HttpCacheRequestOptions } from './http-cache-request-options';
 
 describe('Test HttpProxy service', () => {
   beforeEach(() => {
