@@ -24,12 +24,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/dond2clouds/angular-library-seed.git"
+    "url": "https://github.com/dond2clouds/speedray-swagger-utils"
   },
   "bugs": {
-    "url": "https://github.com/dond2clouds/angular-library-seed/issues"
+    "url": "https://github.com/dond2clouds/speedray-swagger-utils/issues"
   },
-  "homepage": "https://github.com/dond2clouds/angular-library-seed#readme",
+  "homepage": "https://github.com/dond2clouds/speedray-swagger-utils#readme",
   "scripts": {
     "build": "npm run build:esm && npm run build:umd",
     "build:esm": "gulp inline-templates && npm run ngcompile",
