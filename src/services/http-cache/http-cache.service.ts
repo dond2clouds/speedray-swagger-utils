@@ -14,12 +14,13 @@ interface HttpCacheEntry {
     response: Response;
 }
 
+export const HTTP_CACHE_ENTRY_REGEX = /^(com\.xtivia\.speedray\.http\.cache\.entry\.)/;
+export const HTTP_CACHE_SERVICE_REGEX = /^(com\.xtivia\.speedray\.http\.cache\.service\.)/;
+
 @Injectable()
 export class HttpCache {
 
     public static configEntryKey = 'com.xtivia.speedray.http.cache.config';
-    public static cacheEntryRegex = /^(com\.xtivia\.speedray\.http\.cache\.entry\.)/;
-    public static serviceEntryRegex = /^(com\.xtivia\.speedray\.http\.cache\.service\.)/;
     public static cacheEntryPrefix = 'com.xtivia.speedray.http.cache.entry.';
     public static serviceEntryPrefix = 'com.xtivia.speedray.http.cache.service.';
 
@@ -38,7 +39,7 @@ export class HttpCache {
     public static flush() {
         Object.keys(sessionStorage)
             .forEach((key) => {
-                if (HttpCache.cacheEntryRegex.test(key)) {
+                if (HTTP_CACHE_ENTRY_REGEX.test(key)) {
                     sessionStorage.removeItem(key);
                 }
             });
@@ -47,7 +48,7 @@ export class HttpCache {
     public static flushServices() {
         Object.keys(sessionStorage)
             .forEach((key) => {
-                if (HttpCache.serviceEntryRegex.test(key)) {
+                if (HTTP_CACHE_ENTRY_REGEX.test(key)) {
                     sessionStorage.removeItem(key);
                 }
             });
@@ -63,7 +64,7 @@ export class HttpCache {
     private static startTtlCheckTimer() {
         return setInterval(() => {
             Object.keys(sessionStorage).forEach((key) => {
-                if (HttpCache.cacheEntryRegex.test(key)) {
+                if (HTTP_CACHE_SERVICE_REGEX.test(key)) {
                     const entry = JSON.parse(sessionStorage.getItem(key)) as HttpCacheEntry;
                     if (entry && entry.created + HttpCache.config.ttl < Date.now()) {
                         sessionStorage.removeItem(key);

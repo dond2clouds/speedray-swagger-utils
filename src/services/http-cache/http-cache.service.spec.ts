@@ -1,5 +1,5 @@
 import { TestBed, inject } from '@angular/core/testing';
-import { HttpCache, HttpProxy, HttpCacheRequestOptionArgs } from './index';
+import { HttpCache, HttpProxy, HttpCacheRequestOptionArgs, HTTP_CACHE_ENTRY_REGEX, HTTP_CACHE_SERVICE_REGEX } from './index';
 import { Http, BaseRequestOptions, Response, ResponseOptions, XHRBackend, RequestMethod } from '@angular/http';
 import { MockBackend, MockConnection } from '@angular/http/testing';
 import { ReflectiveInjector } from '@angular/core';
