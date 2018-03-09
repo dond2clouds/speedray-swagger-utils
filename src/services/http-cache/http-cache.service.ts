@@ -38,7 +38,7 @@ export class HttpCache {
 
     public static flush() {
         Object.keys(sessionStorage)
-            .forEach((key) => {
+            .forEach(function findEntries(key) {
                 if (HTTP_CACHE_ENTRY_REGEX.test(key)) {
                     sessionStorage.removeItem(key);
                 }
@@ -47,7 +47,7 @@ export class HttpCache {
 
     public static flushServices() {
         Object.keys(sessionStorage)
-            .forEach((key) => {
+            .forEach(function findServices(key) {
                 if (HTTP_CACHE_SERVICE_REGEX.test(key)) {
                     sessionStorage.removeItem(key);
                 }
@@ -63,7 +63,7 @@ export class HttpCache {
 
     private static startTtlCheckTimer() {
         return setInterval(() => {
-            Object.keys(sessionStorage).forEach((key) => {
+            Object.keys(sessionStorage).forEach(function findEntries(key) {
                 if (HTTP_CACHE_ENTRY_REGEX.test(key)) {
                     const entry = JSON.parse(sessionStorage.getItem(key)) as HttpCacheEntry;
                     if (entry && entry.created + HttpCache.config.ttl < Date.now()) {
