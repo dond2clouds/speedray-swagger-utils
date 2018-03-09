@@ -14,15 +14,15 @@ interface HttpCacheEntry {
     response: Response;
 }
 
-export const HTTP_CACHE_ENTRY_REGEX = /^(com\.xtivia\.speedray\.http\.cache\.entry\.)/;
-export const HTTP_CACHE_SERVICE_REGEX = /^(com\.xtivia\.speedray\.http\.cache\.service\.)/;
+const ALL_DOTS_REGEX = new RegExp('\\.', 'g');
+export const HTTP_CACHE_CONFIG_KEY = 'com.xtivia.speedray.http.cache.config';
+export const HTTP_CACHE_ENTRY_KEY = 'com.xtivia.speedray.http.cache.entry.';
+export const HTTP_CACHE_SERVICE_KEY = 'com.xtivia.speedray.http.cache.service.';
+export const HTTP_CACHE_ENTRY_REGEX = new RegExp(HTTP_CACHE_ENTRY_KEY.replace(ALL_DOTS_REGEX, '\\.'));
+export const HTTP_CACHE_SERVICE_REGEX = new RegExp(HTTP_CACHE_SERVICE_KEY.replace(ALL_DOTS_REGEX, '\\.'));
 
 @Injectable()
 export class HttpCache {
-
-    public static configEntryKey = 'com.xtivia.speedray.http.cache.config';
-    public static cacheEntryPrefix = 'com.xtivia.speedray.http.cache.entry.';
-    public static serviceEntryPrefix = 'com.xtivia.speedray.http.cache.service.';
 
     public static setTtl(ttl: number) {
         HttpCache.config.ttl = ttl;
@@ -48,7 +48,7 @@ export class HttpCache {
     public static flushServices() {
         Object.keys(sessionStorage)
             .forEach((key) => {
-                if (HTTP_CACHE_ENTRY_REGEX.test(key)) {
+                if (HTTP_CACHE_SERVICE_REGEX.test(key)) {
                     sessionStorage.removeItem(key);
                 }
             });
@@ -64,7 +64,7 @@ export class HttpCache {
     private static startTtlCheckTimer() {
         return setInterval(() => {
             Object.keys(sessionStorage).forEach((key) => {
-                if (HTTP_CACHE_SERVICE_REGEX.test(key)) {
+                if (HTTP_CACHE_ENTRY_REGEX.test(key)) {
                     const entry = JSON.parse(sessionStorage.getItem(key)) as HttpCacheEntry;
                     if (entry && entry.created + HttpCache.config.ttl < Date.now()) {
                         sessionStorage.removeItem(key);
@@ -75,7 +75,7 @@ export class HttpCache {
     }
 
     private static getConfig(): HttpCacheConfig {
-        const conf = sessionStorage.getItem(HttpCache.configEntryKey);
+        const conf = sessionStorage.getItem(HTTP_CACHE_CONFIG_KEY);
         if (conf) {
             return JSON.parse(conf);
         }
@@ -114,12 +114,12 @@ export class HttpCache {
                 entry[i] = true;
             }
         }
-        sessionStorage.setItem(HttpCache.serviceEntryPrefix + url.toString(), JSON.stringify(entry));
+        sessionStorage.setItem(HTTP_CACHE_SERVICE_KEY + url.toString(), JSON.stringify(entry));
     }
 
     public isServiceCacheable(url: string | Request, options?: HttpCacheRequestOptionArgs): boolean {
         const urlKey = url ? typeof url === 'string' ? url.toString() : (url as Request).url.toString() : null;
-        const serviceEntry = sessionStorage.getItem(HttpCache.serviceEntryPrefix + urlKey);
+        const serviceEntry = sessionStorage.getItem(HTTP_CACHE_SERVICE_KEY + urlKey);
         const service = serviceEntry ? JSON.parse(serviceEntry) : null;
         const methodValue = this.getMethodForString(url instanceof Request ? url.method : options ? options.method : null);
         return  !isNullOrUndefined(methodValue) && service && service[methodValue.valueOf()];
@@ -186,7 +186,7 @@ export class HttpCache {
     }
 
     private createCacheKey(url: string | Request, options: HttpCacheRequestOptionArgs): string {
-        let key = HttpCache.cacheEntryPrefix;
+        let key = HTTP_CACHE_ENTRY_KEY;
         const method = this.getMethod(url, options);
         if (isNullOrUndefined(method)) {
             return null;
@@ -216,7 +216,7 @@ export class HttpCache {
     }
 
     private getCacheServicesEntry(url: string, methods?: Array<string|RequestMethod>): boolean[] {
-        const serviceEntry = sessionStorage.getItem(HttpCache.serviceEntryPrefix + url.toString());
+        const serviceEntry = sessionStorage.getItem(HTTP_CACHE_SERVICE_KEY + url.toString());
         const entryMethods = serviceEntry ? JSON.parse(serviceEntry) : [false, false, false, false, false, false, false];
         if (methods) {
             methods.forEach((method) => {
