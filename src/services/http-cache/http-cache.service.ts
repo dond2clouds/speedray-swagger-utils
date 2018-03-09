@@ -65,7 +65,7 @@ export class HttpCache {
             Object.keys(sessionStorage).forEach((key) => {
                 if (HttpCache.cacheEntryRegex.test(key)) {
                     const entry = JSON.parse(sessionStorage.getItem(key)) as HttpCacheEntry;
-                    if (entry && entry.created + HttpCache.config.ttl) {
+                    if (entry && entry.created + HttpCache.config.ttl < Date.now()) {
                         sessionStorage.removeItem(key);
                     }
                 }

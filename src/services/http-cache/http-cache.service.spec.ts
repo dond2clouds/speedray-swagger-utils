@@ -281,23 +281,31 @@ describe('Test HttpProxy service', () => {
       expect(httpCache).toBeTruthy();
       HttpCache.flush();
       HttpCache.flushServices();
-      HttpCache.setTtl(400);
-      HttpCache.setTtlCheckInterval(500);
-      httpCache.addInterestedService('http://www.mock.com/test-service-one');
-      http.options('http://www.mock.com/test-service-one').subscribe((results) => {
+      HttpCache.setTtlCheckInterval(50);
+      HttpCache.setTtl(50);
+      httpCache.addInterestedService('http://www.mock.com/test-short-ttl');
+      http.options('http://www.mock.com/test-short-ttl').subscribe((results) => {
         expect(results.ok).toBeTruthy();
         expect(results.json().callCounter).toBe(0);
       });
-      setTimeout(function timerDone() {
-        Object.keys(sessionStorage).forEach((key) => {
-          let entryCount = 0;
-          if (HttpCache.cacheEntryRegex.test(key)) {
-            entryCount++;
-          }
-          expect(entryCount).toBe(0);
+      setTimeout(function setBackTtl() {
+        HttpCache.setTtl(3600000);
+        httpCache.addInterestedService('http://www.mock.com/test-long-ttl');
+        http.options('http://www.mock.com/test-long-ttl').subscribe((results) => {
+          expect(results.ok).toBeTruthy();
+          expect(results.json().callCounter).toBe(1);
         });
-        done();
-      }, 1000);
+        setTimeout(function timerDone() {
+          let entryCount = 0;
+          Object.keys(sessionStorage).forEach((key) => {
+            if (HttpCache.cacheEntryRegex.test(key)) {
+              entryCount++;
+            }
+          });
+          expect(entryCount).toBe(1);
+          done();
+        }, 800);
+      }, 200);
     })();
   });
 });
