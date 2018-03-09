@@ -26,3 +26,6 @@ tmp
 
 # Library files
 src/
+
+# Demo app
+demo
