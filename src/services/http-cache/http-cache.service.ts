@@ -62,7 +62,7 @@ export class HttpCache {
     private static ttlTimer = HttpCache.startTtlCheckTimer();
 
     private static startTtlCheckTimer() {
-        return setInterval(() => {
+        return setInterval(function walkTtls() {
             Object.keys(sessionStorage).forEach(function findEntries(key) {
                 if (HTTP_CACHE_ENTRY_REGEX.test(key)) {
                     const entry = JSON.parse(sessionStorage.getItem(key)) as HttpCacheEntry;
