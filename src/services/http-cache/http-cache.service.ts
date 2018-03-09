@@ -21,65 +21,81 @@ export const HTTP_CACHE_SERVICE_KEY = 'com.xtivia.speedray.http.cache.service.';
 export const HTTP_CACHE_ENTRY_REGEX = new RegExp(HTTP_CACHE_ENTRY_KEY.replace(ALL_DOTS_REGEX, '\\.'));
 export const HTTP_CACHE_SERVICE_REGEX = new RegExp(HTTP_CACHE_SERVICE_KEY.replace(ALL_DOTS_REGEX, '\\.'));
 
+const config: HttpCacheConfig = getConfig() || {
+    ttl: 360000,
+    ttlCheckInterval: 5000
+};
+
+let ttlTimer = startTtlCheckTimer();
+
+function startTtlCheckTimer() {
+    return setInterval(function walkTtls() {
+        Object.keys(sessionStorage).forEach(function findEntries(key) {
+            if (HTTP_CACHE_ENTRY_REGEX.test(key)) {
+                const entry = JSON.parse(sessionStorage.getItem(key)) as HttpCacheEntry;
+                if (entry && entry.created + config.ttl < Date.now()) {
+                    sessionStorage.removeItem(key);
+                }
+            }
+        });
+    }, config.ttlCheckInterval);
+}
+
+function getConfig(): HttpCacheConfig {
+    const conf = sessionStorage.getItem(HTTP_CACHE_CONFIG_KEY);
+    if (conf) {
+        return JSON.parse(conf);
+    }
+    return null;
+}
+
+function setTtl(ttl: number) {
+    config.ttl = ttl;
+}
+
+function setTtlCheckInterval(ttlCheckInterval: number) {
+    config.ttlCheckInterval = ttlCheckInterval;
+    if (ttlTimer) {
+        clearInterval(ttlTimer);
+    }
+    ttlTimer = startTtlCheckTimer();
+}
+
+function flush() {
+    Object.keys(sessionStorage)
+        .forEach(function findEntries(key) {
+            if (HTTP_CACHE_ENTRY_REGEX.test(key)) {
+                sessionStorage.removeItem(key);
+            }
+        });
+}
+
+function flushServices() {
+    Object.keys(sessionStorage)
+        .forEach(function findServices(key) {
+            if (HTTP_CACHE_SERVICE_REGEX.test(key)) {
+                sessionStorage.removeItem(key);
+            }
+        });
+}
+
 @Injectable()
 export class HttpCache {
 
     public static setTtl(ttl: number) {
-        HttpCache.config.ttl = ttl;
+        setTtl(ttl);
     }
 
     public static setTtlCheckInterval(ttlCheckInterval: number) {
-        HttpCache.config.ttlCheckInterval = ttlCheckInterval;
-        if (HttpCache.ttlTimer) {
-            clearInterval(HttpCache.ttlTimer);
-        }
-        HttpCache.ttlTimer = HttpCache.startTtlCheckTimer();
+        setTtlCheckInterval(ttlCheckInterval);
     }
 
     public static flush() {
-        Object.keys(sessionStorage)
-            .forEach(function findEntries(key) {
-                if (HTTP_CACHE_ENTRY_REGEX.test(key)) {
-                    sessionStorage.removeItem(key);
-                }
-            });
+        flush();
     }
 
     public static flushServices() {
-        Object.keys(sessionStorage)
-            .forEach(function findServices(key) {
-                if (HTTP_CACHE_SERVICE_REGEX.test(key)) {
-                    sessionStorage.removeItem(key);
-                }
-            });
-    }
-
-    private static config: HttpCacheConfig = HttpCache.getConfig() || {
-        ttl: 360000,
-        ttlCheckInterval: 5000
-    };
-
-    private static ttlTimer = HttpCache.startTtlCheckTimer();
-
-    private static startTtlCheckTimer() {
-        return setInterval(function walkTtls() {
-            Object.keys(sessionStorage).forEach(function findEntries(key) {
-                if (HTTP_CACHE_ENTRY_REGEX.test(key)) {
-                    const entry = JSON.parse(sessionStorage.getItem(key)) as HttpCacheEntry;
-                    if (entry && entry.created + HttpCache.config.ttl < Date.now()) {
-                        sessionStorage.removeItem(key);
-                    }
-                }
-            });
-        }, HttpCache.config.ttlCheckInterval);
-    }
-
-    private static getConfig(): HttpCacheConfig {
-        const conf = sessionStorage.getItem(HTTP_CACHE_CONFIG_KEY);
-        if (conf) {
-            return JSON.parse(conf);
-        }
-        return null;
+        flushServices();
     }
 
     public lookup(url: string | Request, options: HttpCacheRequestOptionArgs): Response {
@@ -89,7 +105,7 @@ export class HttpCache {
                 const entry = sessionStorage.getItem(cacheKey.toString());
                 if (entry) {
                     const results = JSON.parse(entry) as HttpCacheEntry;
-                    if (Date.now() < results.created + HttpCache.config.ttl) {
+                    if (Date.now() < results.created + config.ttl) {
                         return this.createResponseFromJson(results.response);
                     }
                 }
