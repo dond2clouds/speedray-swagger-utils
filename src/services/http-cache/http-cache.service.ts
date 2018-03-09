@@ -4,30 +4,81 @@ import { RequestOptionsArgs, Request, RequestMethod, Response, ResponseOptions, 
 import { HttpCacheRequestOptionArgs } from './http-proxy.service';
 import { isNullOrUndefined } from 'util';
 
+interface HttpCacheConfig {
+    ttl: number;
+    ttlCheckInterval: number;
+}
+
+interface HttpCacheEntry {
+    created: number;
+    response: Response;
+}
+
 @Injectable()
 export class HttpCache {
 
-    private cacheEntryRegex = /^(com\.xtivia\.speedray\.http\.cache\.entry\.)/;
-    private serviceEntryRegex = /^(com\.xtivia\.speedray\.http\.cache\.service\.)/;
-    private cacheEntryPrefix = 'com.xtivia.speedray.http.cache.entry.';
-    private serviceEntryPrefix = 'com.xtivia.speedray.http.cache.service.';
+    public static configEntryKey = 'com.xtivia.speedray.http.cache.config';
+    public static cacheEntryRegex = /^(com\.xtivia\.speedray\.http\.cache\.entry\.)/;
+    public static serviceEntryRegex = /^(com\.xtivia\.speedray\.http\.cache\.service\.)/;
+    public static cacheEntryPrefix = 'com.xtivia.speedray.http.cache.entry.';
+    public static serviceEntryPrefix = 'com.xtivia.speedray.http.cache.service.';
 
-    public flush() {
+    public static setTtl(ttl: number) {
+        HttpCache.config.ttl = ttl;
+    }
+
+    public static setTtlCheckInterval(ttlCheckInterval: number) {
+        HttpCache.config.ttlCheckInterval = ttlCheckInterval;
+        if (HttpCache.ttlTimer) {
+            clearInterval(HttpCache.ttlTimer);
+        }
+        HttpCache.ttlTimer = HttpCache.startTtlCheckTimer();
+    }
+
+    public static flush() {
         Object.keys(sessionStorage)
             .forEach((key) => {
-                if (this.cacheEntryRegex.test(key)) {
+                if (HttpCache.cacheEntryRegex.test(key)) {
                     sessionStorage.removeItem(key);
                 }
             });
     }
 
-    public flushServices() {
+    public static flushServices() {
         Object.keys(sessionStorage)
             .forEach((key) => {
-                if (this.serviceEntryRegex.test(key)) {
+                if (HttpCache.serviceEntryRegex.test(key)) {
                     sessionStorage.removeItem(key);
                 }
             });
+    }
+
+    private static config: HttpCacheConfig = HttpCache.getConfig() || {
+        ttl: 360000,
+        ttlCheckInterval: 5000
+    };
+
+    private static ttlTimer = HttpCache.startTtlCheckTimer();
+
+    private static startTtlCheckTimer() {
+        return setInterval(() => {
+            Object.keys(sessionStorage).forEach((key) => {
+                if (HttpCache.cacheEntryRegex.test(key)) {
+                    const entry = JSON.parse(sessionStorage.getItem(key)) as HttpCacheEntry;
+                    if (entry && entry.created + HttpCache.config.ttl) {
+                        sessionStorage.removeItem(key);
+                    }
+                }
+            });
+        }, HttpCache.config.ttlCheckInterval);
+    }
+
+    private static getConfig(): HttpCacheConfig {
+        const conf = sessionStorage.getItem(HttpCache.configEntryKey);
+        if (conf) {
+            return JSON.parse(conf);
+        }
+        return null;
     }
 
     public lookup(url: string | Request, options: HttpCacheRequestOptionArgs): Response {
@@ -36,7 +87,10 @@ export class HttpCache {
             if (cacheKey) {
                 const entry = sessionStorage.getItem(cacheKey.toString());
                 if (entry) {
-                    return this.createResponseFromJson(entry);
+                    const results = JSON.parse(entry) as HttpCacheEntry;
+                    if (Date.now() < results.created + HttpCache.config.ttl) {
+                        return this.createResponseFromJson(results.response);
+                    }
                 }
 
             }
@@ -59,12 +113,12 @@ export class HttpCache {
                 entry[i] = true;
             }
         }
-        sessionStorage.setItem(this.serviceEntryPrefix + url.toString(), JSON.stringify(entry));
+        sessionStorage.setItem(HttpCache.serviceEntryPrefix + url.toString(), JSON.stringify(entry));
     }
 
     public isServiceCacheable(url: string | Request, options?: HttpCacheRequestOptionArgs): boolean {
         const urlKey = url ? typeof url === 'string' ? url.toString() : (url as Request).url.toString() : null;
-        const serviceEntry = sessionStorage.getItem(this.serviceEntryPrefix + urlKey);
+        const serviceEntry = sessionStorage.getItem(HttpCache.serviceEntryPrefix + urlKey);
         const service = serviceEntry ? JSON.parse(serviceEntry) : null;
         const methodValue = this.getMethodForString(url instanceof Request ? url.method : options ? options.method : null);
         return  !isNullOrUndefined(methodValue) && service && service[methodValue.valueOf()];
@@ -74,7 +128,10 @@ export class HttpCache {
         if (!(options && options.doNotCacheResponse) && this.isServiceCacheable(url, options)) {
             const cacheKey = this.createCacheKey(url, options);
             if (cacheKey) {
-                sessionStorage.setItem(cacheKey.toString(), JSON.stringify(response));
+                sessionStorage.setItem(cacheKey.toString(), JSON.stringify({
+                    created: Date.now(),
+                    response: response
+                }));
             }
         }
     }
@@ -128,7 +185,7 @@ export class HttpCache {
     }
 
     private createCacheKey(url: string | Request, options: HttpCacheRequestOptionArgs): string {
-        let key = this.cacheEntryPrefix;
+        let key = HttpCache.cacheEntryPrefix;
         const method = this.getMethod(url, options);
         if (isNullOrUndefined(method)) {
             return null;
@@ -158,7 +215,7 @@ export class HttpCache {
     }
 
     private getCacheServicesEntry(url: string, methods?: Array<string|RequestMethod>): boolean[] {
-        const serviceEntry = sessionStorage.getItem(this.serviceEntryPrefix + url.toString());
+        const serviceEntry = sessionStorage.getItem(HttpCache.serviceEntryPrefix + url.toString());
         const entryMethods = serviceEntry ? JSON.parse(serviceEntry) : [false, false, false, false, false, false, false];
         if (methods) {
             methods.forEach((method) => {
@@ -181,13 +238,12 @@ export class HttpCache {
         return entryMethods;
     }
 
-    private createResponseFromJson(json: string): Response {
-        const jsonObject = json ? JSON.parse(json) : null;
-        const response = jsonObject ? new Response(new ResponseOptions({
-            body: jsonObject._body,
-            status: jsonObject.status,
-            headers: jsonObject.headers,
-            url: jsonObject.url
+    private createResponseFromJson(object: any): Response {
+        const response = object ? new Response(new ResponseOptions({
+            body: object._body,
+            status: object.status,
+            headers: object.headers,
+            url: object.url
         })) : null;
         return response;
     }

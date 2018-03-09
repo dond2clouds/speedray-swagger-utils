@@ -64,6 +64,10 @@ export default (config) => {
       level: 'log'
     },
 
+    jasmineNodeOpts: {
+      defaultTimeoutInterval: 2500000
+    },
+
     singleRun: true,
     colors: true
   } as ConfigOptions);

@@ -21,15 +21,15 @@ describe('Test HttpProxy service', () => {
   });
 
   it('cached response for all methods handled', inject([Http, HttpCache, MockBackend], (http: Http, httpCache: HttpCache,
-    mockBackend: MockBackend) => {
+                                                                                        mockBackend: MockBackend) => {
     let counter = 0;
     ((http as HttpProxy).getBackend() as MockBackend).connections.subscribe((connection: MockConnection) => {
       connection.mockRespond(new Response(new ResponseOptions({ status: 200, body: { callCounter: counter++ } })));
     });
     expect(http).toBeTruthy();
     expect(httpCache).toBeTruthy();
-    httpCache.flush();
-    httpCache.flushServices();
+    HttpCache.flush();
+    HttpCache.flushServices();
     httpCache.addInterestedService('http://www.mock.com/test-service-one', [RequestMethod.Get]);
     http.get('http://www.mock.com/test-service-one').subscribe((results) => {
       expect(results.ok).toBeTruthy();
@@ -60,15 +60,15 @@ describe('Test HttpProxy service', () => {
   }));
 
   it('non cached response for method handled', inject([Http, HttpCache, MockBackend], (http: Http, httpCache: HttpCache,
-    mockBackend: MockBackend) => {
+                                                                                       mockBackend: MockBackend) => {
     let counter = 0;
     ((http as HttpProxy).getBackend() as MockBackend).connections.subscribe((connection: MockConnection) => {
       connection.mockRespond(new Response(new ResponseOptions({ status: 200, body: { callCounter: counter++ } })));
     });
     expect(http).toBeTruthy();
     expect(httpCache).toBeTruthy();
-    httpCache.flush();
-    httpCache.flushServices();
+    HttpCache.flush();
+    HttpCache.flushServices();
     httpCache.addInterestedService('http://www.mock.com/test-service-one',
       ['put', 'delete', RequestMethod.Head, 'head', 'options', 'post', 'patch']);
     http.get('http://www.mock.com/test-service-one').subscribe((results) => {
@@ -82,15 +82,15 @@ describe('Test HttpProxy service', () => {
   }));
 
   it('handle put correctly with multiple bodies', inject([Http, HttpCache, MockBackend], (http: Http, httpCache: HttpCache,
-    mockBackend: MockBackend) => {
+                                                                                          mockBackend: MockBackend) => {
     let counter = 0;
     ((http as HttpProxy).getBackend() as MockBackend).connections.subscribe((connection: MockConnection) => {
       connection.mockRespond(new Response(new ResponseOptions({ status: 200, body: { callCounter: counter++ } })));
     });
     expect(http).toBeTruthy();
     expect(httpCache).toBeTruthy();
-    httpCache.flush();
-    httpCache.flushServices();
+    HttpCache.flush();
+    HttpCache.flushServices();
     httpCache.addInterestedService('http://www.mock.com/test-service-one');
     http.post('http://www.mock.com/test-service-one', { test: 1 }).subscribe((results) => {
       expect(results.ok).toBeTruthy();
@@ -111,15 +111,15 @@ describe('Test HttpProxy service', () => {
   }));
 
   it('Invalid method registration', inject([Http, HttpCache, MockBackend], (http: Http, httpCache: HttpCache,
-    mockBackend: MockBackend) => {
+                                                                            mockBackend: MockBackend) => {
     let counter = 0;
     ((http as HttpProxy).getBackend() as MockBackend).connections.subscribe((connection: MockConnection) => {
       connection.mockRespond(new Response(new ResponseOptions({ status: 200, body: { callCounter: counter++ } })));
     });
     expect(http).toBeTruthy();
     expect(httpCache).toBeTruthy();
-    httpCache.flush();
-    httpCache.flushServices();
+    HttpCache.flush();
+    HttpCache.flushServices();
     httpCache.addInterestedService('http://www.mock.com/test-service-one', ['get', 'somethingbad']);
     http.get('http://www.mock.com/test-service-one').subscribe((results) => {
       expect(results.ok).toBeTruthy();
@@ -134,15 +134,15 @@ describe('Test HttpProxy service', () => {
   }));
 
   it('doNotCache working', inject([Http, HttpCache, MockBackend], (http: Http, httpCache: HttpCache,
-    mockBackend: MockBackend) => {
+                                                                   mockBackend: MockBackend) => {
     let counter = 0;
     ((http as HttpProxy).getBackend() as MockBackend).connections.subscribe((connection: MockConnection) => {
       connection.mockRespond(new Response(new ResponseOptions({ status: 200, body: { callCounter: counter++ } })));
     });
     expect(http).toBeTruthy();
     expect(httpCache).toBeTruthy();
-    httpCache.flush();
-    httpCache.flushServices();
+    HttpCache.flush();
+    HttpCache.flushServices();
     httpCache.addInterestedService('http://www.mock.com/test-service-one');
     http.get('http://www.mock.com/test-service-one').subscribe((results) => {
       expect(results.ok).toBeTruthy();
@@ -164,15 +164,15 @@ describe('Test HttpProxy service', () => {
     });
   }));
   it('cached response for all methods handled', inject([Http, HttpCache, MockBackend], (http: Http, httpCache: HttpCache,
-    mockBackend: MockBackend) => {
+                                                                                        mockBackend: MockBackend) => {
     let counter = 0;
     ((http as HttpProxy).getBackend() as MockBackend).connections.subscribe((connection: MockConnection) => {
       connection.mockRespond(new Response(new ResponseOptions({ status: 200, body: { callCounter: counter++ } })));
     });
     expect(http).toBeTruthy();
     expect(httpCache).toBeTruthy();
-    httpCache.flush();
-    httpCache.flushServices();
+    HttpCache.flush();
+    HttpCache.flushServices();
     httpCache.addInterestedService('http://www.mock.com/test-service-one', [RequestMethod.Get]);
     http.get('http://www.mock.com/test-service-one').subscribe((results) => {
       expect(results.ok).toBeTruthy();
@@ -203,8 +203,8 @@ describe('Test HttpProxy service', () => {
     });
     expect(http).toBeTruthy();
     expect(httpCache).toBeTruthy();
-    httpCache.flush();
-    httpCache.flushServices();
+    HttpCache.flush();
+    HttpCache.flushServices();
     httpCache.addInterestedService('http://www.mock.com/test-service-one');
     http.put('http://www.mock.com/test-service-one', { request: 'this is a post request' }).subscribe((results) => {
       expect(results.ok).toBeTruthy();
@@ -218,8 +218,8 @@ describe('Test HttpProxy service', () => {
     });
     expect(http).toBeTruthy();
     expect(httpCache).toBeTruthy();
-    httpCache.flush();
-    httpCache.flushServices();
+    HttpCache.flush();
+    HttpCache.flushServices();
     httpCache.addInterestedService('http://www.mock.com/test-service-one');
     http.patch('http://www.mock.com/test-service-one', { request: 'this is a post request' }).subscribe((results) => {
       expect(results.ok).toBeTruthy();
@@ -233,8 +233,8 @@ describe('Test HttpProxy service', () => {
     });
     expect(http).toBeTruthy();
     expect(httpCache).toBeTruthy();
-    httpCache.flush();
-    httpCache.flushServices();
+    HttpCache.flush();
+    HttpCache.flushServices();
     httpCache.addInterestedService('http://www.mock.com/test-service-one');
     http.delete('http://www.mock.com/test-service-one').subscribe((results) => {
       expect(results.ok).toBeTruthy();
@@ -248,8 +248,8 @@ describe('Test HttpProxy service', () => {
     });
     expect(http).toBeTruthy();
     expect(httpCache).toBeTruthy();
-    httpCache.flush();
-    httpCache.flushServices();
+    HttpCache.flush();
+    HttpCache.flushServices();
     httpCache.addInterestedService('http://www.mock.com/test-service-one');
     http.head('http://www.mock.com/test-service-one').subscribe((results) => {
       expect(results.ok).toBeTruthy();
@@ -263,13 +263,41 @@ describe('Test HttpProxy service', () => {
     });
     expect(http).toBeTruthy();
     expect(httpCache).toBeTruthy();
-    httpCache.flush();
-    httpCache.flushServices();
+    HttpCache.flush();
+    HttpCache.flushServices();
     httpCache.addInterestedService('http://www.mock.com/test-service-one');
     http.options('http://www.mock.com/test-service-one').subscribe((results) => {
       expect(results.ok).toBeTruthy();
       expect(results.json().callCounter).toBe(0);
     });
   }));
-
+  it('test ttl timer', (done) => {
+    inject([Http, HttpCache, MockBackend], (http: Http, httpCache: HttpCache, mockBackend: MockBackend) => {
+      let counter = 0;
+      ((http as HttpProxy).getBackend() as MockBackend).connections.subscribe((connection: MockConnection) => {
+        connection.mockRespond(new Response(new ResponseOptions({ status: 200, body: { callCounter: counter++ } })));
+      });
+      expect(http).toBeTruthy();
+      expect(httpCache).toBeTruthy();
+      HttpCache.flush();
+      HttpCache.flushServices();
+      HttpCache.setTtl(400);
+      HttpCache.setTtlCheckInterval(500);
+      httpCache.addInterestedService('http://www.mock.com/test-service-one');
+      http.options('http://www.mock.com/test-service-one').subscribe((results) => {
+        expect(results.ok).toBeTruthy();
+        expect(results.json().callCounter).toBe(0);
+      });
+      setTimeout(function timerDone() {
+        Object.keys(sessionStorage).forEach((key) => {
+          let entryCount = 0;
+          if (HttpCache.cacheEntryRegex.test(key)) {
+            entryCount++;
+          }
+          expect(entryCount).toBe(0);
+        });
+        done();
+      }, 1000);
+    })();
+  });
 });
