@@ -298,7 +298,7 @@ describe('Test HttpProxy service', () => {
         setTimeout(function timerDone() {
           let entryCount = 0;
           Object.keys(sessionStorage).forEach((key) => {
-            if (HttpCache.cacheEntryRegex.test(key)) {
+            if (HTTP_CACHE_ENTRY_REGEX.test(key)) {
               entryCount++;
             }
           });
