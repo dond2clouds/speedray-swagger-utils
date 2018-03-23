@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs/observable';
+import { Observable } from 'rxjs/Observable';
 import { RequestOptionsArgs, Request, RequestMethod, Response, ResponseOptions, RequestOptions } from '@angular/http';
 import { HttpCacheRequestOptionArgs } from './http-proxy.service';
 import { isNullOrUndefined } from 'util';
@@ -28,7 +28,7 @@ const config: HttpCacheConfig = getConfig() || {
 
 let ttlTimer = startTtlCheckTimer();
 
-function startTtlCheckTimer() {
+export function startTtlCheckTimer() {
     return setInterval(function walkTtls() {
         Object.keys(sessionStorage).forEach(function findEntries(key) {
             if (HTTP_CACHE_ENTRY_REGEX.test(key)) {
@@ -41,7 +41,7 @@ function startTtlCheckTimer() {
     }, config.ttlCheckInterval);
 }
 
-function getConfig(): HttpCacheConfig {
+export function getConfig(): HttpCacheConfig {
     const conf = sessionStorage.getItem(HTTP_CACHE_CONFIG_KEY);
     if (conf) {
         return JSON.parse(conf);
@@ -49,11 +49,11 @@ function getConfig(): HttpCacheConfig {
     return null;
 }
 
-function setTtl(ttl: number) {
+export function setTtl(ttl: number) {
     config.ttl = ttl;
 }
 
-function setTtlCheckInterval(ttlCheckInterval: number) {
+export function setTtlCheckInterval(ttlCheckInterval: number) {
     config.ttlCheckInterval = ttlCheckInterval;
     if (ttlTimer) {
         clearInterval(ttlTimer);
@@ -61,7 +61,7 @@ function setTtlCheckInterval(ttlCheckInterval: number) {
     ttlTimer = startTtlCheckTimer();
 }
 
-function flush() {
+export function flush() {
     Object.keys(sessionStorage)
         .forEach(function findEntries(key) {
             if (HTTP_CACHE_ENTRY_REGEX.test(key)) {
@@ -70,7 +70,7 @@ function flush() {
         });
 }
 
-function flushServices() {
+export function flushServices() {
     Object.keys(sessionStorage)
         .forEach(function findServices(key) {
             if (HTTP_CACHE_SERVICE_REGEX.test(key)) {
@@ -81,22 +81,6 @@ function flushServices() {
 
 @Injectable()
 export class HttpCache {
-
-    public static setTtl(ttl: number) {
-        setTtl(ttl);
-    }
-
-    public static setTtlCheckInterval(ttlCheckInterval: number) {
-        setTtlCheckInterval(ttlCheckInterval);
-    }
-
-    public static flush() {
-        flush();
-    }
-
-    public static flushServices() {
-        flushServices();
-    }
 
     public lookup(url: string | Request, options: HttpCacheRequestOptionArgs): Response {
         if (!(options && options.doNotUseCachedResponse)) {

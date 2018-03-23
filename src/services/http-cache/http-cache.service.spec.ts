@@ -1,5 +1,6 @@
 import { TestBed, inject } from '@angular/core/testing';
-import { HttpCache, HttpProxy, HttpCacheRequestOptionArgs, HTTP_CACHE_ENTRY_REGEX, HTTP_CACHE_SERVICE_REGEX } from './index';
+import { HttpCache, HttpProxy, HttpCacheRequestOptionArgs, flush, flushServices,
+  setTtlCheckInterval, setTtl, HTTP_CACHE_ENTRY_REGEX, HTTP_CACHE_SERVICE_REGEX } from './index';
 import { Http, BaseRequestOptions, Response, ResponseOptions, XHRBackend, RequestMethod } from '@angular/http';
 import { MockBackend, MockConnection } from '@angular/http/testing';
 import { ReflectiveInjector } from '@angular/core';
@@ -28,8 +29,8 @@ describe('Test HttpProxy service', () => {
     });
     expect(http).toBeTruthy();
     expect(httpCache).toBeTruthy();
-    HttpCache.flush();
-    HttpCache.flushServices();
+    flush();
+    flushServices();
     httpCache.addInterestedService('http://www.mock.com/test-service-one', [RequestMethod.Get]);
     http.get('http://www.mock.com/test-service-one').subscribe((results) => {
       expect(results.ok).toBeTruthy();
@@ -67,8 +68,8 @@ describe('Test HttpProxy service', () => {
     });
     expect(http).toBeTruthy();
     expect(httpCache).toBeTruthy();
-    HttpCache.flush();
-    HttpCache.flushServices();
+    flush();
+    flushServices();
     httpCache.addInterestedService('http://www.mock.com/test-service-one',
       ['put', 'delete', RequestMethod.Head, 'head', 'options', 'post', 'patch']);
     http.get('http://www.mock.com/test-service-one').subscribe((results) => {
@@ -89,8 +90,8 @@ describe('Test HttpProxy service', () => {
     });
     expect(http).toBeTruthy();
     expect(httpCache).toBeTruthy();
-    HttpCache.flush();
-    HttpCache.flushServices();
+    flush();
+    flushServices();
     httpCache.addInterestedService('http://www.mock.com/test-service-one');
     http.post('http://www.mock.com/test-service-one', { test: 1 }).subscribe((results) => {
       expect(results.ok).toBeTruthy();
@@ -118,8 +119,8 @@ describe('Test HttpProxy service', () => {
     });
     expect(http).toBeTruthy();
     expect(httpCache).toBeTruthy();
-    HttpCache.flush();
-    HttpCache.flushServices();
+    flush();
+    flushServices();
     httpCache.addInterestedService('http://www.mock.com/test-service-one', ['get', 'somethingbad']);
     http.get('http://www.mock.com/test-service-one').subscribe((results) => {
       expect(results.ok).toBeTruthy();
@@ -141,8 +142,8 @@ describe('Test HttpProxy service', () => {
     });
     expect(http).toBeTruthy();
     expect(httpCache).toBeTruthy();
-    HttpCache.flush();
-    HttpCache.flushServices();
+    flush();
+    flushServices();
     httpCache.addInterestedService('http://www.mock.com/test-service-one');
     http.get('http://www.mock.com/test-service-one').subscribe((results) => {
       expect(results.ok).toBeTruthy();
@@ -171,8 +172,8 @@ describe('Test HttpProxy service', () => {
     });
     expect(http).toBeTruthy();
     expect(httpCache).toBeTruthy();
-    HttpCache.flush();
-    HttpCache.flushServices();
+    flush();
+    flushServices();
     httpCache.addInterestedService('http://www.mock.com/test-service-one', [RequestMethod.Get]);
     http.get('http://www.mock.com/test-service-one').subscribe((results) => {
       expect(results.ok).toBeTruthy();
@@ -203,8 +204,8 @@ describe('Test HttpProxy service', () => {
     });
     expect(http).toBeTruthy();
     expect(httpCache).toBeTruthy();
-    HttpCache.flush();
-    HttpCache.flushServices();
+    flush();
+    flushServices();
     httpCache.addInterestedService('http://www.mock.com/test-service-one');
     http.put('http://www.mock.com/test-service-one', { request: 'this is a post request' }).subscribe((results) => {
       expect(results.ok).toBeTruthy();
@@ -218,8 +219,8 @@ describe('Test HttpProxy service', () => {
     });
     expect(http).toBeTruthy();
     expect(httpCache).toBeTruthy();
-    HttpCache.flush();
-    HttpCache.flushServices();
+    flush();
+    flushServices();
     httpCache.addInterestedService('http://www.mock.com/test-service-one');
     http.patch('http://www.mock.com/test-service-one', { request: 'this is a post request' }).subscribe((results) => {
       expect(results.ok).toBeTruthy();
@@ -233,8 +234,8 @@ describe('Test HttpProxy service', () => {
     });
     expect(http).toBeTruthy();
     expect(httpCache).toBeTruthy();
-    HttpCache.flush();
-    HttpCache.flushServices();
+    flush();
+    flushServices();
     httpCache.addInterestedService('http://www.mock.com/test-service-one');
     http.delete('http://www.mock.com/test-service-one').subscribe((results) => {
       expect(results.ok).toBeTruthy();
@@ -248,8 +249,8 @@ describe('Test HttpProxy service', () => {
     });
     expect(http).toBeTruthy();
     expect(httpCache).toBeTruthy();
-    HttpCache.flush();
-    HttpCache.flushServices();
+    flush();
+    flushServices();
     httpCache.addInterestedService('http://www.mock.com/test-service-one');
     http.head('http://www.mock.com/test-service-one').subscribe((results) => {
       expect(results.ok).toBeTruthy();
@@ -263,8 +264,8 @@ describe('Test HttpProxy service', () => {
     });
     expect(http).toBeTruthy();
     expect(httpCache).toBeTruthy();
-    HttpCache.flush();
-    HttpCache.flushServices();
+    flush();
+    flushServices();
     httpCache.addInterestedService('http://www.mock.com/test-service-one');
     http.options('http://www.mock.com/test-service-one').subscribe((results) => {
       expect(results.ok).toBeTruthy();
@@ -279,17 +280,17 @@ describe('Test HttpProxy service', () => {
       });
       expect(http).toBeTruthy();
       expect(httpCache).toBeTruthy();
-      HttpCache.flush();
-      HttpCache.flushServices();
-      HttpCache.setTtlCheckInterval(50);
-      HttpCache.setTtl(50);
+      flush();
+      flushServices();
+      setTtlCheckInterval(50);
+      setTtl(50);
       httpCache.addInterestedService('http://www.mock.com/test-short-ttl');
       http.options('http://www.mock.com/test-short-ttl').subscribe((results) => {
         expect(results.ok).toBeTruthy();
         expect(results.json().callCounter).toBe(0);
       });
       setTimeout(function setBackTtl() {
-        HttpCache.setTtl(3600000);
+        setTtl(3600000);
         httpCache.addInterestedService('http://www.mock.com/test-long-ttl');
         http.options('http://www.mock.com/test-long-ttl').subscribe((results) => {
           expect(results.ok).toBeTruthy();
