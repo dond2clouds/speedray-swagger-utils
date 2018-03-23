@@ -28,7 +28,7 @@ const config: HttpCacheConfig = getConfig() || {
 
 let ttlTimer = startTtlCheckTimer();
 
-export function startTtlCheckTimer() {
+export function startTtlCheckTimer(): any {
     return setInterval(function walkTtls() {
         Object.keys(sessionStorage).forEach(function findEntries(key) {
             if (HTTP_CACHE_ENTRY_REGEX.test(key)) {
