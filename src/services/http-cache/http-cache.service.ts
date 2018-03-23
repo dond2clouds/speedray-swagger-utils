@@ -4,7 +4,7 @@ import { RequestOptionsArgs, Request, RequestMethod, Response, ResponseOptions, 
 import { HttpCacheRequestOptionArgs } from './http-proxy.service';
 import { isNullOrUndefined } from 'util';
 
-interface HttpCacheConfig {
+export interface HttpCacheConfig {
     ttl: number;
     ttlCheckInterval: number;
 }
