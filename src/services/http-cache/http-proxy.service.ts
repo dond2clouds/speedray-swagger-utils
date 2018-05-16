@@ -7,6 +7,8 @@ import 'rxjs/add/operator/map';
 import { inherits } from 'util';
 import { HttpCacheRequestOptions } from './http-cache-request-options';
 
+const isIe: boolean = /MSIE|Trident\/|Edge\//.test(window.navigator.userAgent);
+
 export function httpFactory(backend: XHRBackend, options: RequestOptions, httpCache: HttpCache): HttpProxy {
     return new HttpProxy(backend, options, httpCache);
 }
@@ -39,7 +41,7 @@ export class HttpProxy extends Http {
                 observer.next(results);
             });
         }
-        return super.request(url, options).map((response) => {
+        return super.request(url, this.addIeOptions(options)).map((response) => {
             this.httpCache.cacheServiceResponse(url, response, options);
             return response;
         });
@@ -77,6 +79,30 @@ export class HttpProxy extends Http {
     public options(url: string, options?: HttpCacheRequestOptionArgs): Observable<Response> {
         return this.request(new Request(this.mergeOptions(this._defaultOptions,
                              options, RequestMethod.Options, url)) as any, options);
+    }
+
+    protected ieSearchOptions(search?: any): any {
+        search = search ?
+            (typeof search === 'string' ? new URLSearchParams(search as string) : new URLSearchParams())
+            : new URLSearchParams();
+        search.append('ieFix', new Date().getTime().toString());
+        return search;
+    }
+
+    protected ieHeadersOptions(headers: any): Headers {
+        headers = headers ? headers : new Headers();
+        headers.append('Pragma', 'no-cache');
+        headers.append('Cache-Control', 'no-cache');
+        return headers;
+    }
+
+    protected addIeOptions(options: RequestOptionsArgs): RequestOptionsArgs {
+        if (isIe) {
+            options = options || {};
+            this.ieHeadersOptions(options.headers);
+            this.ieSearchOptions(options.search);
+        }
+        return options;
     }
 
     private mergeOptions(defaultOpts: HttpCacheRequestOptions, providedOpts: HttpCacheRequestOptionArgs, method: string | RequestMethod,
