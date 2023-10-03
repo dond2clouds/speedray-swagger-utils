@@ -82,7 +82,7 @@
     "codecov": "^3.0.0",
     "codelyzer": "^4.1.0",
     "concurrently": "^3.5.1",
-    "css-loader": "^0.28.1",
+    "css-loader": "^6.8.1",
     "gh-pages": "^1.0.0",
     "gulp": "^3.9.1",
     "gulp-inline-ng2-template": "^4.0.0",
